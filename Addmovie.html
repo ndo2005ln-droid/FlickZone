@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add Movie</title>
+<link rel="stylesheet" href="styles.css">
+<script src="script.js"></script>
+<style>
+body { margin:0; font-family: Arial; background:#141414; color:#fff; }
+.container { width:80%; margin:30px auto; background:#1f1f1f; padding:25px; border-radius:15px; }
+h2 { color:#e50914; text-align:center; margin-bottom:25px; }
+input, textarea { width:100%; padding:12px; margin-top:10px; border-radius:8px; border:1px solid #444; background:#222; color:#fff; }
+textarea { resize:none; height:60px; }
+button { width:100%; padding:12px; background:#e50914; color:#fff; border:none; border-radius:8px; font-size:16px; margin-top:20px; cursor:pointer; }
+button:hover { background:#f6121d; }
+.back { display:block; width:100px; margin-bottom:15px; text-decoration:none; color:#fff; background:#e50914; text-align:center; padding:8px; border-radius:6px; }
+.back:hover { background:#f6121d; }
+.success { text-align:center; margin-top:15px; color:#e50914; font-size:18px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <a href="index.html" class="back">← Back</a>
+  <h2>Add New Movie</h2>
+  <p style="color:#f6f0f0; margin-bottom:15px;">Need help? Contact us: <a href="mailto:admin@flickzone.com" class="email-link">admin@flickzone.com</a></p>
+  <input id="newTitle" type="text" placeholder="Movie Title">
+  <input id="newImage" type="text" placeholder="Image URL (Poster)">
+  <textarea id="newDescription" placeholder="Movie Description"></textarea>
+  <button onclick="addMovie()">Add Movie</button>
+  <div id="msg" class="success"></div>
+</div>
+
+<script>
+function addMovie() {
+  const title = document.getElementById("newTitle").value.trim();
+  const image = document.getElementById("newImage").value.trim();
+  const description = document.getElementById("newDescription").value.trim();
+
+  if (!title || !image) {
+    alert("Title and Image are required!");
+    return;
+  }
+
+  let movies = JSON.parse(localStorage.getItem("movies")) || [];
+  movies.push({ title, image, description });
+  localStorage.setItem("movies", JSON.stringify(movies));
+
+  document.getElementById("msg").textContent = "Movie added successfully!";
+  document.getElementById("newTitle").value = "";
+  document.getElementById("newImage").value = "";
+  document.getElementById("newDescription").value = "";
+}
+</script>
+</body>
+</html>

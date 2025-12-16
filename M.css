@@ -1,0 +1,46 @@
+/* External CSS File for FlickZone */
+
+/* Global Styles */
+body {
+    font-family: Arial, sans-serif;
+}
+
+/* Navigation Links */
+.nav-link {
+    color: #e50914;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.nav-link:hover {
+    color: #f6121d;
+}
+
+/* Contact Email Link */
+.email-link {
+    color: #e50914;
+    text-decoration: none;
+}
+
+.email-link:hover {
+    text-decoration: underline;
+}
+
+/* List Styles */
+.movie-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+.movie-list li {
+    padding: 10px;
+    margin: 5px 0;
+    background: #1f1f1f;
+    border-radius: 5px;
+}
+#Header-image {
+  width: 60%;         
+  height: auto;         
+  max-width: 600px;        
+  object-fit: cover;    
+}

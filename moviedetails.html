@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Movie Details</title>
+<style>
+body { margin:0; font-family: Arial; background-color: #141414; color: #fff; }
+.container { padding: 20px; max-width: 900px; margin: auto; }
+.poster { 
+  width: 70%; 
+  max-height: 400px; 
+  object-fit: cover; 
+  border-radius: 10px; 
+  display: block; 
+  margin: 20px auto; 
+  box-shadow: 0 20px 40px rgba(0,0,0,0.7); 
+  transform: translateY(-10px); 
+}
+h1 { text-align:center; margin-top:20px; display:inline-block; }
+#detailsBtn { margin-left:20px; padding:5px 10px; cursor:pointer; border:none; border-radius:5px; background:#e50914; color:#fff; }
+#detailsBtn:hover { background:#f6121d; }
+.review-section { margin-top: 30px; }
+.review-form input, 
+.review-form textarea, 
+.review-form select, 
+.review-form button { 
+  width: 100%; margin-bottom: 10px; padding: 8px; border-radius:5px; border:1px solid #444; background:#222; color:#fff; 
+}
+.review-form textarea { resize: none; height: 60px; }
+.review-form button { background:#e50914; border:none; cursor:pointer; }
+.review-form button:hover { background:#f6121d; }
+.review-list { margin-top:20px; }
+.review-item { border-top:1px solid #444; padding:10px 0; }
+.review-item p { margin:5px 0; }
+.stars { color: gold; font-size: 16px; display:inline-block; vertical-align: middle; margin-left: 5px; }
+.average { margin-top:20px; font-weight:bold; font-size:18px; }
+.average .stars { font-size:16px; vertical-align: middle; margin-left:5px; }
+#detailsTable { width:100%; border-collapse: collapse; margin-top:20px; display:none; }
+#detailsTable th, #detailsTable td { border:1px solid #444; padding:8px; text-align:left; }
+#detailsTable th { background:#222; }
+#detailsTable td { background:#1f1f1f; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <img id="moviePoster" class="poster" src="" alt="Movie Poster">
+  
+  <h1 id="movieTitle"></h1>
+  <button id="detailsBtn">Details</button>
+  <p id="movieDescription"></p>
+
+  <table id="detailsTable">
+    <tr><th>Year</th><td id="movieYear"></td></tr>
+    <tr><th>Genre</th><td id="movieGenre"></td></tr>
+    <tr><th>Duration</th><td id="movieDuration"></td></tr>
+    <tr><th>Director</th><td id="movieDirector"></td></tr>
+    <tr><th>Language</th><td id="movieLanguage"></td></tr>
+  </table>
+
+  <div class="review-section">
+    <h2>Add Your Review</h2>
+
+    <div class="review-form">
+      <input type="text" id="userName" placeholder="Your Name">
+      <textarea id="userOpinion" placeholder="Your Opinion"></textarea>
+
+      <select id="userStars">
+        <option value="1">⭐ 1</option>
+        <option value="2">⭐⭐ 2</option>
+        <option value="3">⭐⭐⭐ 3</option>
+        <option value="4">⭐⭐⭐⭐ 4</option>
+        <option value="5" selected>⭐⭐⭐⭐⭐ 5</option>
+      </select>
+
+      <button type="button" onclick="addReview()">Submit Review</button>
+    </div>
+
+    <div class="average" id="averageRating">Average Rating: <span class="stars">0</span></div>
+
+    <div class="review-list" id="reviewList"></div>
+  </div>
+</div>
+
+<script>
+let movie = JSON.parse(localStorage.getItem("selectedMovie"));
+document.getElementById("movieTitle").textContent = movie.title;
+document.getElementById("movieDescription").textContent = movie.description;
+document.getElementById("moviePoster").src = movie.image;
+
+const movieDetails = {
+  "The Shawshank Redemption": { year:1994, genre:"Drama", duration:"142 min", director:"Frank Darabont", language:"English" },
+  "The Godfather": { year:1972, genre:"Crime, Drama", duration:"175 min", director:"Francis Ford Coppola", language:"English" },
+  "The Dark Knight": { year:2008, genre:"Action, Crime, Drama", duration:"152 min", director:"Christopher Nolan", language:"English" },
+  "Pulp Fiction": { year:1994, genre:"Crime, Drama", duration:"154 min", director:"Quentin Tarantino", language:"English" },
+  "Schindler's List": { year:1993, genre:"Biography, Drama, History", duration:"195 min", director:"Steven Spielberg", language:"English" },
+  "12 Angry Men": { year:1957, genre:"Drama", duration:"96 min", director:"Sidney Lumet", language:"English" },
+  "The Lord of the Rings: The Return of the King": { year:2003, genre:"Adventure, Drama, Fantasy", duration:"201 min", director:"Peter Jackson", language:"English" },
+  "The Good, the Bad and the Ugly": { year:1966, genre:"Western", duration:"178 min", director:"Sergio Leone", language:"English" },
+  "Fight Club": { year:1999, genre:"Drama", duration:"139 min", director:"David Fincher", language:"English" },
+  "The Lord of the Rings: The Fellowship of the Ring": { year:2001, genre:"Adventure, Drama, Fantasy", duration:"178 min", director:"Peter Jackson", language:"English" },
+  "Forrest Gump": { year:1994, genre:"Drama, Romance", duration:"142 min", director:"Robert Zemeckis", language:"English" },
+  "Inception": { year:2010, genre:"Action, Adventure, Sci-Fi", duration:"148 min", director:"Christopher Nolan", language:"English" },
+  "The Matrix": { year:1999, genre:"Action, Sci-Fi", duration:"136 min", director:"Lana Wachowski, Lilly Wachowski", language:"English" },
+  "Goodfellas": { year:1990, genre:"Biography, Crime, Drama", duration:"146 min", director:"Martin Scorsese", language:"English" },
+  "One Flew Over the Cuckoo's Nest": { year:1975, genre:"Drama", duration:"133 min", director:"Milos Forman", language:"English" },
+  "Se7en": { year:1995, genre:"Crime, Drama, Mystery", duration:"127 min", director:"David Fincher", language:"English" },
+  "The Silence of the Lambs": { year:1991, genre:"Crime, Drama, Thriller", duration:"118 min", director:"Jonathan Demme", language:"English" },
+  "Saving Private Ryan": { year:1998, genre:"Drama, War", duration:"169 min", director:"Steven Spielberg", language:"English" },
+  "Interstellar": { year:2014, genre:"Adventure, Drama, Sci-Fi", duration:"169 min", director:"Christopher Nolan", language:"English" },
+  "Gladiator": { year:2000, genre:"Action, Adventure, Drama", duration:"155 min", director:"Ridley Scott", language:"English" },
+  "The Green Mile": { year:1999, genre:"Crime, Drama, Fantasy", duration:"189 min", director:"Frank Darabont", language:"English" }
+};
+
+if(movieDetails[movie.title]) {
+  document.getElementById("movieYear").textContent = movieDetails[movie.title].year;
+  document.getElementById("movieGenre").textContent = movieDetails[movie.title].genre;
+  document.getElementById("movieDuration").textContent = movieDetails[movie.title].duration;
+  document.getElementById("movieDirector").textContent = movieDetails[movie.title].director;
+  document.getElementById("movieLanguage").textContent = movieDetails[movie.title].language;
+}
+
+document.getElementById("detailsBtn").addEventListener("click", ()=> {
+  const table = document.getElementById("detailsTable");
+  table.style.display = table.style.display==="none" ? "table" : "none";
+});
+
+let reviews = JSON.parse(localStorage.getItem(movie.title + "_reviews")) || [];
+
+function getStars(count) { return "★".repeat(count); }
+
+function displayReviews() {
+  const reviewList = document.getElementById("reviewList");
+  reviewList.innerHTML = "";
+  let totalStars = 0;
+  reviews.forEach(r => {
+    const div = document.createElement("div");
+    div.className = "review-item";
+    div.innerHTML = `
+      <p><strong>${r.name}</strong> <span class="stars">${getStars(r.stars)}</span></p>
+      <p>${r.opinion}</p>
+    `;
+    reviewList.appendChild(div);
+    totalStars += parseInt(r.stars);
+  });
+  const avg = reviews.length ? (totalStars / reviews.length).toFixed(1) : 0;
+  const avgStars = getStars(Math.round(avg));
+  document.getElementById("averageRating").innerHTML = `
+    Average Rating: ${avg} <span class="stars">${avgStars}</span>
+  `;
+}
+
+function addReview() {
+  const name = document.getElementById("userName").value.trim();
+  const opinion = document.getElementById("userOpinion").value.trim();
+  const stars = document.getElementById("userStars").value;
+  if (!name || !opinion) return;
+  reviews.push({ name, opinion, stars });
+  localStorage.setItem(movie.title + "_reviews", JSON.stringify(reviews));
+  displayReviews();
+  document.getElementById("userName").value = "";
+  document.getElementById("userOpinion").value = "";
+  document.getElementById("userStars").value = "5";
+}
+
+displayReviews();
+</script>
+
+</body>
+</html>
+

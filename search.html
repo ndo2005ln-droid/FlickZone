@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlickZone</title>
+<link rel="stylesheet" href="styles.css">
+<script src="script.js"></script>
+<style>
+body { margin:0; font-family: Arial, sans-serif; background-color:#141414; color:#fff; }
+.container { max-width: 1000px; margin:auto; padding:20px; }
+h1 {
+    text-align:center; 
+    margin-bottom:20px; 
+    color:#e50914; 
+    font-size:64px; 
+    text-shadow:
+      2px 2px 0 #000,
+      4px 4px 0 #111,
+      6px 6px 0 #222,
+      8px 8px 0 #333;
+}
+.search-bar { width:calc(100% - 220px); padding:10px; border-radius:5px; border:1px solid #444; background:#222; color:#fff; margin-bottom:20px; display:inline-block; }
+.add-btn, .sort-btn { width:100px; padding:10px; border:none; border-radius:5px; background:#e50914; color:#fff; cursor:pointer; display:inline-block; vertical-align:top; margin-left:10px; }
+.add-btn:hover, .sort-btn:hover { background:#f6121d; }
+.movie-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:15px; }
+.movie-card { background:#1f1f1f; border-radius:10px; overflow:hidden; cursor:pointer; transition:0.2s; }
+.movie-card:hover { transform:scale(1.05); }
+.movie-card img { width:100%; height:220px; object-fit:cover; }
+.movie-info { padding:10px; }
+.movie-title { font-size:16px; font-weight:bold; margin:0; color:#fff; }
+.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; }
+.modal-content { background:#222; padding:20px; border-radius:10px; width:300px; display:flex; flex-direction:column; gap:10px; }
+.modal-content input, .modal-content textarea { padding:8px; border-radius:5px; border:1px solid #444; background:#333; color:#fff; width:100%; }
+.modal-content textarea { resize:none; height:60px; }
+.modal-content button { padding:8px; border:none; border-radius:5px; background:#e50914; color:#fff; cursor:pointer; }
+.modal-content button:hover { background:#f6121d; }
+.stars-container { display:flex; gap:5px; cursor:pointer; justify-content:center; }
+.star { font-size:24px; color:gray; }
+.star.selected, .star.hover { color:gold; }
+#currentDate { text-align:center; margin:20px 0; color:#fff; font-size:16px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>FlickZone</h1>
+  <input type="text" id="searchInput" class="search-bar" placeholder="Search by movie name...">
+  <button class="add-btn" onclick="openModal()">+ Add</button>
+  <button class="sort-btn" onclick="sortMovies()">HighestRated</button>
+  <div id="movieGrid" class="movie-grid"></div>
+</div>
+
+<div class="modal" id="addModal">
+  <div class="modal-content">
+    <input type="text" id="newTitle" placeholder="Movie Title">
+    <input type="text" id="newImage" placeholder="Image URL">
+    <div class="stars-container" id="starPicker">
+      <span class="star" data-value="1">★</span>
+      <span class="star" data-value="2">★</span>
+      <span class="star" data-value="3">★</span>
+      <span class="star" data-value="4">★</span>
+      <span class="star" data-value="5">★</span>
+    </div>
+    <textarea id="newDescription" placeholder="Your Review"></textarea>
+    <button onclick="addMovie()">Add Movie</button>
+    <button onclick="closeModal()">Cancel</button>
+  </div>
+</div>
+
+<div id="currentDate"></div>
+
+<script>
+let selectedStars = 0;
+const starElements = document.querySelectorAll("#starPicker .star");
+starElements.forEach(star => {
+  star.addEventListener("mouseover", ()=> {
+    const val = parseInt(star.dataset.value);
+    starElements.forEach(s=> s.classList.toggle("hover", parseInt(s.dataset.value)<=val));
+  });
+  star.addEventListener("mouseout", ()=> {
+    starElements.forEach(s=> s.classList.toggle("hover", false));
+    starElements.forEach(s=> s.classList.toggle("selected", parseInt(s.dataset.value)<=selectedStars));
+  });
+  star.addEventListener("click", ()=> {
+    selectedStars = parseInt(star.dataset.value);
+    starElements.forEach(s=> s.classList.toggle("selected", parseInt(s.dataset.value)<=selectedStars));
+  });
+});
+
+const movies = [
+{ title:"The Shawshank Redemption", image:"https://m.media-amazon.com/images/S/pv-target-images/169dfa295bcd5cb7a09175b076f41a8ae4c1fbe8ba94cf5baf051160bb1564de.jpg", description:"Two imprisoned men bond over a number of years, finding solace and eventual redemption through acts of common decency.", stars:5 },
+{ title:"The Godfather", image:"https://upload.wikimedia.org/wikipedia/en/1/1c/Godfather_ver1.jpg", description:"The aging patriarch of an organized crime dynasty transfers control of his clandestine empire to his reluctant son.", stars:5 },
+{ title:"The Dark Knight", image:"https://tse1.mm.bing.net/th/id/OIP.lCYQZpdqe5UK_DBQgWGfkQHaJ4?rs=1&pid=ImgDetMain&o=7&rm=3", description:"Batman faces the Joker, a criminal mastermind who wants to plunge Gotham City into anarchy.", stars:5 },
+{ title:"Pulp Fiction", image:"https://tse2.mm.bing.net/th/id/OIP.8DNz6WOrrRU7R41yn6cIcgHaLH?rs=1&pid=ImgDetMain&o=7&rm=3", description:"The lives of two mob hitmen, a boxer, a gangster's wife, and a pair of diner bandits intertwine in four tales of violence and redemption.", stars:4 },
+{ title:"Schindler's List", image:"https://tse1.mm.bing.net/th/id/OIP.bp7qPuOIJ4uT95T7WVCc0wHaLH?rs=1&pid=ImgDetMain&o=7&rm=3", description:"In German-occupied Poland during WWII, Oskar Schindler gradually becomes concerned for his Jewish workforce after witnessing their persecution by the Nazis.", stars:5 },
+{ title:"12 Angry Men", image:"https://tse1.mm.bing.net/th/id/OIP.maC3jEi_gXMaFc3OEQzIPgHaLH?rs=1&pid=ImgDetMain&o=7&rm=3", description:"A dissenting juror in a murder trial slowly manages to convince the others that the case is not as obvious as it seemed in court.", stars:4 },
+{ title:"The Lord of the Rings: The Return of the King", image:"https://tse2.mm.bing.net/th/id/OIP.vW6xtC8M4UPvfcotxgzDdQHaLH?rs=1&pid=ImgDetMain&o=7&rm=3", description:"Gondor and its allies prepare for battle while Frodo and Sam reach the heart of Mordor in their quest to destroy the One Ring.", stars:5 },
+{ title:"The Good, the Bad and the Ugly", image:"https://tse2.mm.bing.net/th/id/OIP.qAztHpKm9fBPi3BEjYaRjQHaLH?rs=1&pid=ImgDetMain&o=7&rm=3", description:"A bounty hunting scam joins two men in an uneasy alliance against a third in a race to find a fortune in gold buried in a remote cemetery.", stars:4 },
+{ title:"Fight Club", image:"https://tse4.mm.bing.net/th/id/OIP.GGzj_iHbeurTqIEcNGIEdwHaLH?rs=1&pid=ImgDetMain&o=7&rm=3", description:"An insomniac office worker and a devil-may-care soap maker form an underground fight club that evolves into something much more.", stars:5 },
+{ title:"The Lord of the Rings: The Fellowship of the Ring", image:"https://www.themoviedb.org/t/p/original/koNxGpDq5eIDBlXPX1GQtBuOiPS.jpg", description:"A meek Hobbit from the Shire and eight companions set out on a journey to destroy the powerful One Ring and save Middle-earth.", stars:5 },
+{ title:"Forrest Gump", image:"https://tse2.mm.bing.net/th/id/OIP.F0Vfgx82wATNOWlLZ0KK7wHaJ3?rs=1&pid=ImgDetMain&o=7&rm=3", description:"The presidencies of Kennedy and Johnson, Vietnam, Watergate, and other history unfold through the perspective of an Alabama man with an IQ of 75.", stars:5 },
+{ title:"Inception", image:"https://tse3.mm.bing.net/th/id/OIP.fYLXgLBnnbp3N8JCRuUIGAHaLH?rs=1&pid=ImgDetMain&o=7&rm=3", description:"A thief who steals corporate secrets through dream-sharing technology is given the inverse task of planting an idea into the mind of a CEO.", stars:5 },
+{ title:"The Matrix", image:"https://tse1.mm.bing.net/th/id/OIP.rZdNNSeHnwC-LuwpE1EYFgHaLI?rs=1&pid=ImgDetMain&o=7&rm=3", description:"A computer hacker learns about the true nature of his reality and his role in the war against its controllers.", stars:5 },
+{ title:"Goodfellas", image:"https://tse4.mm.bing.net/th/id/OIP.2ouESwFmU4jueZvOfUKqfwHaLH?rs=1&pid=ImgDetMain&o=7&rm=3", description:"The story of Henry Hill and his life in the mob, covering his relationship with his wife Karen Hill and his mob partners.", stars:4 },
+{ title:"One Flew Over the Cuckoo's Nest", image:"https://m.media-amazon.com/images/M/MV5BYjBkMjgzMzYtNzRiMS00NDc3LWE4YTUtZjYxYjZhNjNhYzhhXkEyXkFqcGc@.V1_FMjpg_UX1000.jpg", description:"A criminal pleads insanity and is admitted to a mental institution, where he rebels against the oppressive nurse and rallies up the scared patients.", stars:5 },
+{ title:"Se7en", image:"https://upload.wikimedia.org/wikipedia/en/6/68/Seven_%28movie%29_poster.jpg", description:"Two detectives hunt a serial killer who uses the seven deadly sins as his motives.", stars:5 },
+{ title:"The Silence of the Lambs", image:"https://upload.wikimedia.org/wikipedia/en/8/86/The_Silence_of_the_Lambs_poster.jpg", description:"A young FBI cadet must confide in a incarcerated and manipulative cannibal killer to catch another serial killer.", stars:5 },
+{ title:"Saving Private Ryan", image:"https://image.tmdb.org/t/p/original/AdpcyHDrwxUuBi6OCSvNbAmRLKK.jpg", description:"Following the Normandy Landings, a group of U.S. soldiers go behind enemy lines to retrieve a paratrooper whose brothers have been killed in action.", stars:5 },
+{ title:"Interstellar", image:"https://tse4.mm.bing.net/th/id/OIP.n-lW5hhF0w9CCmLzfl6aRAHaK-?rs=1&pid=ImgDetMain&o=7&rm=3", description:"A team of explorers travel through a wormhole in space in an attempt to ensure humanity's survival.", stars:5 },
+{ title:"Gladiator", image:"https://tse4.mm.bing.net/th/id/OIP.xg8eq2gqhjIbB2Klf8U96wHaK9?rs=1&pid=ImgDetMain&o=7&rm=3", description:"A former Roman General sets out to exact vengeance against the corrupt emperor who murdered his family and sent him into slavery.", stars:5 },
+{ title:"The Green Mile", image:"https://tse4.mm.bing.net/th/id/OIP.B0iC4_trXVTa8lUi80fBEAHaLH?rs=1&pid=ImgDetMain&o=7&rm=3", description:"The lives of guards on Death Row are affected by one of their charges: a black man accused of child murder and rape, yet who has a mysterious gift.", stars:5 }
+];
+
+if(!localStorage.getItem("movies")){
+
+  localStorage.setItem("movies", JSON.stringify(movies));
+
+}
+
+function displayMovies(list=movies) {
+  const grid = document.getElementById("movieGrid");
+  grid.innerHTML = "";
+  list.forEach(movie => {
+    const card = document.createElement("div");
+    card.className = "movie-card";
+     card.onclick = () => {
+
+      localStorage.setItem("selectedMovie", JSON.stringify(movie));
+
+      window.location.href = "moviedetails.html";
+
+    };
+    card.innerHTML = `
+      <img src="${movie.image}" alt="${movie.title}">
+      <div class="movie-info">
+        <p class="movie-title">${movie.title}</p>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function openModal() { document.getElementById("addModal").style.display = "flex"; }
+function closeModal() { document.getElementById("addModal").style.display = "none"; selectedStars=0; starElements.forEach(s=>s.classList.remove("selected")); }
+
+function addMovie() {
+  const title = document.getElementById("newTitle").value.trim();
+  const image = document.getElementById("newImage").value.trim();
+  const description = document.getElementById("newDescription").value.trim();
+  if(title && image && selectedStars>0) {
+    const newMovie = { title, image, description, stars:selectedStars };
+    movies.push(newMovie);
+     localStorage.setItem("movies", JSON.stringify(movies));
+    displayMovies(movies);
+    closeModal();
+    document.getElementById("newTitle").value="";
+    document.getElementById("newImage").value="";
+    document.getElementById("newDescription").value="";
+  }
+}
+
+function sortMovies() {
+  const sorted = [...movies].sort((a,b)=> (b.stars || 0) - (a.stars || 0));
+  displayMovies(sorted);
+}
+
+displayMovies();
+
+document.getElementById("searchInput").addEventListener("input",(e)=>{
+  const value = e.target.value.toLowerCase();
+  const filtered = movies.filter(m => m.title.toLowerCase().includes(value));
+  displayMovies(filtered);
+});
+
+const dateEl = document.getElementById("currentDate");
+const now = new Date();
+const options = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
+dateEl.textContent = now.toLocaleDateString('en-US', options);
+</script>
+
+</body>
+</html>

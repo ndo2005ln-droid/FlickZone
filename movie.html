@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Movie Details</title>
+<link rel="stylesheet" href="styles.css">
+<script src="script.js"></script>
+<style>
+body{margin:0;font-family:Arial;background-color:#111;color:#fff;}
+.container{max-width:800px;margin:auto;padding:20px;}
+.back{display:inline-block;margin-bottom:20px;background:#e50914;color:#fff;padding:10px 15px;border-radius:6px;text-decoration:none;}
+.back:hover{background:#f6121d;}
+img{width:100%;border-radius:8px;max-height:450px;object-fit:cover;}
+h1{margin-top:15px;}
+p{margin-top:10px;font-size:16px;line-height:1.5;}
+.star-rating span{font-size:24px;color:gold;}
+iframe{width:100%;height:400px;margin-top:15px;border:none;border-radius:8px;}
+</style>
+</head>
+<body>
+<div class="container">
+<a class="back" href="index.html">← Back</a>
+<div id="movieDetails"></div>
+</div>
+<script>
+const movie=JSON.parse(localStorage.getItem("selectedMovie"));
+if(!movie){
+
+  window.location.href = "index.html";
+
+}
+if(movie){
+const container=document.getElementById("movieDetails");
+container.innerHTML=`
+<img src="${movie.image}">
+<h1>${movie.title}</h1>
+<p><strong>Category:</strong> ${movie.category}</p>
+<div class="star-rating">${generateStars(movie.rating)}</div>
+<p>${movie.description}</p>
+<iframe src="${movie.trailer}" allowfullscreen></iframe>
+`;
+}
+function generateStars(rating){let stars="";for(let i=1;i<=5;i++){stars+=i<=rating?"★":"☆";}return stars;}
+</script>
+</body>
+</html>
